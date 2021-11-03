@@ -447,4 +447,16 @@ Wire Wire Line
 Connection ~ 2150 2500
 Wire Wire Line
 	2150 2750 2150 2900
+Text Notes 6100 4200 0    50   ~ 0
+DFU\n
+Wire Wire Line
+	6200 4200 6200 4400
+Wire Wire Line
+	6200 4400 4550 4400
+Wire Wire Line
+	4550 4400 4550 2550
+Wire Wire Line
+	4550 2550 3450 2550
+Wire Wire Line
+	3450 2550 3450 2600
 $EndSCHEMATC
