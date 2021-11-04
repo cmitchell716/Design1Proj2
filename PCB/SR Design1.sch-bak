@@ -121,7 +121,7 @@ MISO
 Text Notes 5850 4450 0    50   ~ 0
 ~CS
 Text Notes 2750 2400 0    50   ~ 0
-ECEN 4013 \nGROUP 1\nREV 1\n
+ECEN 4013 \nGROUP 1\nREV 0.2\n
 $Comp
 L Connector:Conn_01x04_Female J1
 U 1 1 61749D72

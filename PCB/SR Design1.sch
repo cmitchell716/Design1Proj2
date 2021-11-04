@@ -36,8 +36,6 @@ F 3 "~" H 6150 4650 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5250 2900 5250 3800
-Wire Wire Line
 	2950 3800 2950 3600
 Wire Wire Line
 	3850 3600 3850 4550
@@ -214,8 +212,6 @@ Wire Wire Line
 Wire Wire Line
 	3650 2400 3650 2600
 Wire Wire Line
-	5300 3000 5300 3850
-Wire Wire Line
 	5300 3850 2850 3850
 Wire Wire Line
 	5300 3000 5950 3000
@@ -344,17 +340,6 @@ Wire Wire Line
 Wire Wire Line
 	1750 2500 1400 2500
 Connection ~ 1400 2500
-$Comp
-L Connector:Conn_01x02_Female Batt1
-U 1 1 618BAE07
-P 1150 3250
-F 0 "Batt1" V 1300 3300 50  0000 R CNN
-F 1 "PWR" V 1200 3300 50  0000 R CNN
-F 2 "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical" H 1150 3250 50  0001 C CNN
-F 3 "~" H 1150 3250 50  0001 C CNN
-	1    1150 3250
-	-1   0    0    1   
-$EndComp
 Wire Wire Line
 	1400 3250 1400 3750
 Connection ~ 4450 3750
@@ -459,4 +444,19 @@ Wire Wire Line
 	4550 2550 3450 2550
 Wire Wire Line
 	3450 2550 3450 2600
+Wire Wire Line
+	5300 3000 5300 3850
+Wire Wire Line
+	5250 2900 5250 3800
+$Comp
+L Connector:Conn_01x02_Female Batt1
+U 1 1 618BAE07
+P 1150 3250
+F 0 "Batt1" V 1300 3300 50  0000 R CNN
+F 1 "PWR" V 1200 3300 50  0000 R CNN
+F 2 "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical" H 1150 3250 50  0001 C CNN
+F 3 "~" H 1150 3250 50  0001 C CNN
+	1    1150 3250
+	-1   0    0    1   
+$EndComp
 $EndSCHEMATC
