@@ -6,11 +6,15 @@
 TinyGPS gps;
 SoftwareSerial ss(4, 5);
 MPU9250 mpu;
+bool newGPS = false;
+bool newIMU = false;
+float accX, accY, accZ, magX, magY, magZ, gyrX, gyrY, gyrZ;
 
 void setup() {
   Serial.begin(115200);
   ss.begin(9600);
   Wire.begin();
+  delay(2000);
 
   if (!mpu.setup(0x68)) {  
       while (1) {
@@ -23,52 +27,70 @@ void setup() {
     mpu.setGyroBias(-1.20, 1.95, -0.08);
     mpu.setMagBias(128.27, -144.56, -176.65);
     mpu.setMagScale(1.18, 1.03, 0.85);
-    //mpu.setmagneticDeclination();
+    mpu.setMagneticDeclination(3.08);
   }
 
 }
 
 void loop() {
-  bool newGPS = false;
-  for (unsigned long start = millis(); millis() - start < 1000;)
+  if (mpu.available()) {
+        mpu.update_accel_gyro();
+        mpu.update_mag();
+        //static uint32_t prev_ms = millis();
+        //if (millis() > prev_ms + 100) {
+            //save_IMU_measurements();
+            //newIMU = true;
+            //prev_ms = millis();
+        //}
+        save_IMU_measurements();
+        newIMU = true;
+  }
+
+  for (unsigned long start = millis(); millis() - start < 5;)
   {
     while (ss.available())
     {
       char c = ss.read();
-      // Serial.write(c); // uncomment this line if you want to see the GPS data flowing
-      if (gps.encode(c)) // Did a new valid sentence come in?
+      if (gps.encode(c))  
         newGPS = true;
     }
   }
-  bool newIMU = mpu.available();
-
-  if(newGPS) {
-    print_GPS_measurements();
-  }
-  else Serial.println(F("No GPS Data"));
-  if(newIMU){
-    mpu.update_accel_gyro();
-    mpu.update_mag();
+  
+  if(newIMU && newGPS) {
     print_IMU_measurements();
+    newIMU = false;
+    print_GPS_measurements();
+    newGPS = false;
   }
-  else Serial.println(F("No IMU Data"));
 
+}
+
+void save_IMU_measurements(){
+  accX = mpu.getAccX();
+  accY = mpu.getAccY();
+  accZ = mpu.getAccZ();
+  magX = mpu.getMagX();
+  magY = mpu.getMagY(); 
+  magZ = mpu.getMagZ(); 
+  gyrX = mpu.getGyroX();
+  gyrY = mpu.getGyroY();
+  gyrZ = mpu.getGyroZ();
 }
 
 void print_IMU_measurements() {
     Serial.print("Acceleration X, Y, Z: ");
-    Serial.print(mpu.getAccX(), 2);
+    Serial.print(accX, 2);
     Serial.print(", ");
-    Serial.print(mpu.getAccY(), 2);
+    Serial.print(accY, 2);
     Serial.print(", ");
-    Serial.print(mpu.getAccZ(), 2);
+    Serial.print(accZ, 2);
     Serial.print("  ");
     Serial.print("Mag X, Y, Z: ");
-    Serial.print(mpu.getMagX(), 2);
+    Serial.print(magX, 2);
     Serial.print(", ");
-    Serial.print(mpu.getMagY(), 2);
+    Serial.print(magY, 2);
     Serial.print(", ");
-    Serial.print(mpu.getMagZ(), 2);
+    Serial.print(magZ, 2);
     Serial.print(", ");
     Serial.print("Gyro X, Y, Z: ");
     Serial.print(mpu.getGyroX(), 2);
