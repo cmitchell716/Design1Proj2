@@ -1,9 +1,9 @@
 #include "C:\Users\cmitc\Documents\SeniorDesign1\Project2\repo\headers\MPU9250.h" //must change this line to location on your machine
 #include <Wire.h>
 #include <SoftwareSerial.h>
-#include <TinyGPS.h>
+#include <TinyGPS_stripped.h>
 #include <SPI.h>
-//#include <SD.h>
+#include <SdFat.h>
 
 #include "Adafruit_BLE.h"
 #include "Adafruit_BluefruitLE_UART.h"
@@ -12,12 +12,13 @@
 TinyGPS gps;
 SoftwareSerial ss(4, 5);
 MPU9250 mpu;
-//File myFile;
+SdFat sd;
 SoftwareSerial bluefruitSS = SoftwareSerial(6, 7);
 Adafruit_BluefruitLE_UART ble(bluefruitSS, 8,
                       9, 10);
-bool newGPS = false;
-bool newIMU = false;
+boolean newGPS = false;
+boolean newIMU = false;
+long outputTimer;
 
 void setup() {
   Serial.begin(115200);
@@ -39,19 +40,13 @@ void setup() {
     mpu.setMagneticDeclination(3.08);
   }
 
+  outputTimer = millis();
 }
 
 void loop() {
   if (mpu.available()) {
         mpu.update_accel_gyro();
         mpu.update_mag();
-        //static uint32_t prev_ms = millis();
-        //if (millis() > prev_ms + 100) {
-            //save_IMU_measurements();
-            //newIMU = true;
-            //prev_ms = millis();
-        //}
-        //save_IMU_measurements();
         newIMU = true;
   }
 
@@ -70,6 +65,32 @@ void loop() {
     newIMU = false;
     print_GPS_measurements();
     newGPS = false;
+    outputTimer = millis();
+  }
+  else if(millis() - outputTimer > 10000){
+    if(newIMU){
+      print_IMU_measurements();
+      Serial.println(F("GPS not Connected"));
+      ble.println(F("GPS not Connected"));
+      outputTimer = millis();
+      newIMU = false;
+      newGPS = false;
+    }
+    else if(newGPS){
+      Serial.print(F("IMU not Connected"));
+      ble.print(F("IMU not Connected"));
+      print_GPS_measurements();
+      outputTimer = millis();
+      newIMU = false;
+      newGPS = false;
+    }
+    else{
+      Serial.println(F("No data available"));
+      ble.println(F("No data available"));
+      outputTimer = millis();
+      newIMU = false;
+      newGPS = false;
+    }
   }
 
 }
@@ -97,12 +118,33 @@ void print_IMU_measurements() {
     Serial.print(mpu.getGyroY(), 2);
     Serial.print(", ");
     Serial.println(mpu.getGyroZ(), 2);
+
+    ble.print("Acceleration X, Y, Z: ");
+    ble.print(mpu.getAccX(), 2);
+    ble.print(", ");
+    ble.print(mpu.getAccY(), 2);
+    ble.print(", ");
+    ble.print(mpu.getAccZ(), 2);
+    ble.print("  ");
+    ble.print("Mag X, Y, Z: ");
+    ble.print(mpu.getMagX(), 2);
+    ble.print(", ");
+    ble.print(mpu.getMagY(), 2);
+    ble.print(", ");
+    ble.print(mpu.getMagZ(), 2);
+    ble.print(", ");
+    ble.print("Gyro X, Y, Z: ");
+    ble.print(mpu.getGyroX(), 2);
+    ble.print(", ");
+    ble.print(mpu.getGyroY(), 2);
+    ble.print(", ");
+    ble.println(mpu.getGyroZ(), 2);
 }
 
 void print_GPS_measurements() {
   float flat, flon;
-  unsigned long age, alt;
-  gps.f_get_position(&flat, &flon, &age);
+  unsigned int alt;
+  gps.f_get_position(&flat, &flon );
   Serial.print("LAT=");
   Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
   Serial.print(" LON=");
@@ -111,4 +153,13 @@ void print_GPS_measurements() {
   Serial.print(alt == TinyGPS::GPS_INVALID_ALTITUDE ? 0 : gps.altitude());
   Serial.print(" SAT=");
   Serial.println(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+
+  ble.print("LAT=");
+  ble.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+  ble.print(" LON=");
+  ble.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+  ble.print(" ALT=");
+  ble.print(alt == TinyGPS::GPS_INVALID_ALTITUDE ? 0 : gps.altitude());
+  ble.print(" SAT=");
+  ble.println(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
 }
