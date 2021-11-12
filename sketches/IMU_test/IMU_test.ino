@@ -24,16 +24,18 @@ void setup() {
 }
 
 void loop() {
-    if (mpu.update()) {
+    if (mpu.available()) {
+        mpu.update_accel_gyro();
+        mpu.update_mag();
         static uint32_t prev_ms = millis();
-        if (millis() > prev_ms + 250) {
-            print_measurements();
+        if (millis() > prev_ms + 100) {
+            print_IMU_measurements();
             prev_ms = millis();
         }
     }
 }
 
-void print_measurements() {
+void print_IMU_measurements() {
     Serial.print("Acceleration X, Y, Z: ");
     Serial.print(mpu.getAccX(), 2);
     Serial.print(", ");
