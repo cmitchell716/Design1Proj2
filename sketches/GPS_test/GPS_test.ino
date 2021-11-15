@@ -8,9 +8,9 @@
 */
 
 TinyGPS gps;
-SoftwareSerial ss(4, 5);
+SoftwareSerial ss(3,4);
 
-void setup()
+void setup()000    
 {
   Serial.begin(115200);
   ss.begin(9600);
@@ -54,6 +54,7 @@ void loop()
     Serial.print(" PREC=");
     Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());  
   }
+  else Serial.println("No new GPS data");
   
   gps.stats(&chars, &sentences, &failed);
   Serial.print(" CHARS=");

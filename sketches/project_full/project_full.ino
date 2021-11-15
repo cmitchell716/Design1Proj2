@@ -7,15 +7,14 @@
 
 #include "Adafruit_BLE.h"
 #include "Adafruit_BluefruitLE_UART.h"
-//#include "BluefruitConfig.h"
 
 TinyGPS gps;
-SoftwareSerial ss(4, 5);
+SoftwareSerial ss(3, 4);
 MPU9250 mpu;
 SdFat sd;
 SdFile myFile;
-SoftwareSerial bluefruitSS = SoftwareSerial(6, 7);
-Adafruit_BluefruitLE_UART ble(bluefruitSS, 8, 9, 3);
+SoftwareSerial bluefruitSS = SoftwareSerial(7, 6);
+Adafruit_BluefruitLE_UART ble(bluefruitSS, 9, 8, -1);
 boolean newGPS = false;
 boolean newIMU = false;
 boolean SDavailable = false;
@@ -43,14 +42,14 @@ void setup() {
     mpu.setMagneticDeclination(3.08);
   }
 
-  //if ( !ble.begin() )
+  if ( !ble.begin() )
   {
-    //Serial.println(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
+    Serial.println(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
   }
-  //else{
-    //ble.echo(false);
-    //ble.setMode(BLUEFRUIT_MODE_DATA);
-  //}
+  else{
+    ble.echo(false);
+    ble.setMode(BLUEFRUIT_MODE_DATA);
+  }
 
   SDavailable = sd.begin(10, SPI_HALF_SPEED);
   if(SDavailable){
@@ -121,7 +120,7 @@ void print_IMU_measurements() {
     Serial.print(F(", "));
     Serial.println(mpu.getGyroZ(), 2);
 
-  
+    
     ble.print(F("Acceleration X, Y, Z: "));
     ble.print(mpu.getAccX(), 2);
     ble.print(", ");
@@ -171,7 +170,7 @@ void print_IMU_measurements() {
   }
   else{
     Serial.println(F("No IMU data"));
-    //ble.println(F("No IMU data"));
+    ble.println(F("No IMU data"));
     if(SDavailable){
       myFile.open(filename, O_WRITE | O_AT_END);
       myFile.print(F("\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\","));
@@ -219,7 +218,7 @@ void print_GPS_measurements() {
   }
   else{
     Serial.println(F("No GPS data"));
-    //ble.println(F("No GPS data"));
+    ble.println(F("No GPS data"));
     if(SDavailable){
       myFile.open(filename, O_WRITE | O_AT_END);
       myFile.println(F("\"N/D\",\"N/D\",\"N/D\",\"N/D\""));
