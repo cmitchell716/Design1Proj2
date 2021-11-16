@@ -3,7 +3,7 @@
 #include <SoftwareSerial.h>
 #include <TinyGPS_stripped.h>
 #include <SPI.h>
-#include <SdFat.h>
+#include <SD.h>
 
 #include "Adafruit_BLE.h"
 #include "Adafruit_BluefruitLE_UART.h"
@@ -11,22 +11,24 @@
 TinyGPS gps;
 SoftwareSerial ss(3, 4);
 MPU9250 mpu;
-SdFat sd;
-SdFile myFile;
+File myFile;
 SoftwareSerial bluefruitSS = SoftwareSerial(7, 6);
 Adafruit_BluefruitLE_UART ble(bluefruitSS, 9, 8, -1);
 boolean newGPS = false;
 boolean newIMU = false;
 boolean SDavailable = false;
+boolean printBle = true;
+boolean GPSlock = false;
 unsigned long outputTimer;
 
-char filename[] = "SD_write.txt"; // need to change to date/time
+char filename[] = "Output_Record.csv"; // need to change to date/time
 
 void setup() {
   Serial.begin(115200);
   ss.begin(9600);
   Wire.begin();
   delay(2000);
+  pinMode(2, OUTPUT);
 
   if (!mpu.setup(0x68)) {  
       while (1) {
@@ -51,7 +53,7 @@ void setup() {
     ble.setMode(BLUEFRUIT_MODE_DATA);
   }
 
-  SDavailable = sd.begin(10, SPI_HALF_SPEED);
+  SDavailable = SD.begin(10);
   if(SDavailable){
     create_file();
   }
@@ -75,6 +77,11 @@ void loop() {
         newGPS = true;
     }
   }
+
+  if(GPSlock){
+    digitalWrite(2, HIGH);
+  }
+  else digitalWrite(2, LOW);
   
   if((newIMU && newGPS) || (millis() - outputTimer > 1000)) {
     print_IMU_measurements();
@@ -82,18 +89,28 @@ void loop() {
     print_GPS_measurements();
     newGPS = false;
     outputTimer = millis();
+    if(printBle){
+      printBle = false;
+    }
+    else printBle = true;
+
+    if(newGPS){
+      GPSlock = true;
+    }
+    else GPSlock = false;
   }
 
 }
 
 void create_file(){
-  if (!myFile.open(filename, O_WRITE | O_CREAT | O_AT_END)) {
-      //sd.errorHalt("open failed");
+  if (SD.exists(filename)) {
+    SD.remove(filename);
   }
-  else{
+  myFile = SD.open(filename, FILE_WRITE);
+  if (myFile) {
     myFile.println(F("\"AccX\",\"AccY\",\"AccZ\",\"MagX\",\"MagY\",\"MagZ\",\"GyrX\",\"GyrY\",\"GyrZ\",\"Lat\",\"Lon\",\"Alt\",\"Sat\""));
-    myFile.close();
   }
+  myFile.close();
 }
 
 
@@ -121,30 +138,32 @@ void print_IMU_measurements() {
     Serial.println(mpu.getGyroZ(), 2);
 
     
-    ble.print(F("Acceleration X, Y, Z: "));
-    ble.print(mpu.getAccX(), 2);
-    ble.print(", ");
-    ble.print(mpu.getAccY(), 2);
-    ble.print(F(", "));
-    ble.print(mpu.getAccZ(), 2);
-    ble.print(F("  "));
-    ble.print(F("Mag X, Y, Z: "));
-    ble.print(mpu.getMagX(), 2);
-    ble.print(F(", "));
-    ble.print(mpu.getMagY(), 2);
-    ble.print(F(", "));
-    ble.print(mpu.getMagZ(), 2);
-    ble.print(F(", "));
-    ble.print(F("Gyro X, Y, Z: "));
-    ble.print(mpu.getGyroX(), 2);
-    ble.print(F(", "));
-    ble.print(mpu.getGyroY(), 2);
-    ble.print(F(", "));
-    ble.println(mpu.getGyroZ(), 2);
+    if(printBle){
+      ble.print(F("Acceleration X, Y, Z: "));
+      ble.print(mpu.getAccX(), 2);
+      ble.print(", ");
+      ble.print(mpu.getAccY(), 2);
+      ble.print(F(", "));
+      ble.print(mpu.getAccZ(), 2);
+      ble.print(F("  "));
+      ble.print(F("Mag X, Y, Z: "));
+      ble.print(mpu.getMagX(), 2);
+      ble.print(F(", "));
+      ble.print(mpu.getMagY(), 2);
+      ble.print(F(", "));
+      ble.print(mpu.getMagZ(), 2);
+      ble.print(F(", "));
+      ble.print(F("Gyro X, Y, Z: "));
+      ble.print(mpu.getGyroX(), 2);
+      ble.print(F(", "));
+      ble.print(mpu.getGyroY(), 2);
+      ble.print(F(", "));
+      ble.println(mpu.getGyroZ(), 2);
+    }
     
 
     if(SDavailable){
-      myFile.open(filename, O_WRITE | O_AT_END);
+      myFile = SD.open(filename, FILE_WRITE);
       myFile.print(F("\""));
       myFile.print(mpu.getAccX(), 2);
       myFile.print(F("\",\""));
@@ -172,7 +191,7 @@ void print_IMU_measurements() {
     Serial.println(F("No IMU data"));
     ble.println(F("No IMU data"));
     if(SDavailable){
-      myFile.open(filename, O_WRITE | O_AT_END);
+      myFile = SD.open(filename, FILE_WRITE);
       myFile.print(F("\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\",\"N/D\","));
       myFile.close();
     }    
@@ -193,18 +212,20 @@ void print_GPS_measurements() {
     Serial.println(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
   
     
-    ble.print(F("LAT="));
-    ble.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
-    ble.print(F(" LON="));
-    ble.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
-    ble.print(F(" ALT="));
-    ble.print(gps.altitude() == TinyGPS::GPS_INVALID_ALTITUDE ? 0 : gps.altitude());
-    ble.print(F(" SAT="));
-    ble.println(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+    if(printBle){
+      ble.print(F("LAT="));
+      ble.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+      ble.print(F(" LON="));
+      ble.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+      ble.print(F(" ALT="));
+      ble.print(gps.altitude() == TinyGPS::GPS_INVALID_ALTITUDE ? 0 : gps.altitude());
+      ble.print(F(" SAT="));
+      ble.println(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+    }
     
 
     if(SDavailable){
-      myFile.open(filename, O_WRITE | O_AT_END);
+      myFile = SD.open(filename, FILE_WRITE);
       myFile.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
       myFile.print(F("\",\""));
       myFile.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
@@ -220,7 +241,7 @@ void print_GPS_measurements() {
     Serial.println(F("No GPS data"));
     ble.println(F("No GPS data"));
     if(SDavailable){
-      myFile.open(filename, O_WRITE | O_AT_END);
+      myFile = SD.open(filename, FILE_WRITE);
       myFile.println(F("\"N/D\",\"N/D\",\"N/D\",\"N/D\""));
       myFile.close();
     }  
