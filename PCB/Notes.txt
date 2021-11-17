@@ -1,0 +1,4 @@
+Notes on PCB
+
+1. Cut bottom trace on Net (A1-Pad8) between via and Pin 8 on Arudino
+2. Connected power switch between, Aux2 pin 1 and Pin 8 of Arudino 
