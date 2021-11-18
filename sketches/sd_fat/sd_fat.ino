@@ -5,11 +5,11 @@ SdFat sd;
 SdFile myFile;
 
 const int chipSelect = 10;
-char filename[] = "SD_write.txt"; // need to change to date/time
+char filename[] = "out.csv"; // need to change to date/time
 
 void setup() {
   // begin
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial) { 
      ; 
   }

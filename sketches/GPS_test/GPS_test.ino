@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 
-#include <TinyGPS.h>
+#include <TinyGPS_stripped.h>
 
 /* This sample code demonstrates the normal use of a TinyGPS object.
    It requires the use of SoftwareSerial, and assumes that you have a
@@ -10,7 +10,7 @@
 TinyGPS gps;
 SoftwareSerial ss(3,4);
 
-void setup()000    
+void setup() 
 {
   Serial.begin(115200);
   ss.begin(9600);
@@ -50,12 +50,12 @@ void loop()
     Serial.print(" ALT=");
     Serial.print(alt == TinyGPS::GPS_INVALID_ALTITUDE ? 0 : gps.altitude());
     Serial.print(" SAT=");
-    Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
-    Serial.print(" PREC=");
-    Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());  
+    Serial.println(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+    //Serial.print(" PREC=");
+    //Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());  
   }
   else Serial.println("No new GPS data");
-  
+  /*
   gps.stats(&chars, &sentences, &failed);
   Serial.print(" CHARS=");
   Serial.print(chars);
@@ -65,4 +65,5 @@ void loop()
   Serial.println(failed);
   if (chars == 0)
     Serial.println("** No characters received from GPS: check wiring **");
+    */
 }

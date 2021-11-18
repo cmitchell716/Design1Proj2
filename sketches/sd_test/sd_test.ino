@@ -14,7 +14,7 @@ void setup() {
   }
   Serial.println("Initialization done.");
 
-  String filename = "SD_write.txt"; // need to change to date/time
+  String filename = "SD_test.txt"; // need to change to date/time
   
   // check if old file exists
   if (SD.exists(filename)) {
